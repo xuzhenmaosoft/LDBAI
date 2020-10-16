@@ -1,0 +1,130 @@
+import argparse
+import logging
+import logging.config
+
+import tensorflow as tf
+from py4j.java_gateway import java_import
+from pyspark import java_gateway
+from pyspark.conf import SparkConf
+from pyspark.context import SparkContext
+from pyspark.sql import DataFrame, SQLContext
+from pyspark.sql import SparkSession
+from tensorflowonspark import TFCluster
+
+
+def map_fun(args, ctx):
+    from datetime import datetime
+    import time
+    <IMPORT>
+
+    worker_num = ctx.worker_num
+
+    job_name = ctx.job_name
+    task_index = ctx.task_index
+    tf.logging.set_verbosity(tf.logging.INFO)
+
+    cluster, server = ctx.start_cluster_server(1, args.rdma)
+
+    # Create generator for Spark data feed
+    tf_feed = ctx.get_data_feed(True)
+
+    logdir = ctx.absolute_path(args.model)
+    if job_name == "ps":
+        server.join()
+    elif job_name == "worker":
+        # Assigns ops to the local worker by default.do
+        with tf.device(tf.train.replica_device_setter(
+                worker_device="/job:worker/task:%d" % task_index,
+                cluster=cluster)):
+            global_step = tf.train.get_or_create_global_step()
+            train_op, evaluate, prediction = <TRAIN_FUN> (args, tf_feed=tf_feed,
+            global_step=global_step)
+            saver = tf.train.Saver()
+            summary_op = tf.summary.merge_all()
+            init_op = tf.global_variables_initializer()
+        summary_writer = tf.summary.FileWriter(logdir + "/tensorboard_%d" % worker_num, graph=tf.get_default_graph())
+        hooks = [tf.train.StopAtStepHook(last_step=args.steps)] if args.mode == "train" else []
+        with tf.train.MonitoredTrainingSession(master=server.target,
+                                               is_chief=(task_index == 0),
+                                               scaffold=tf.train.Scaffold(init_op=init_op, summary_op=summary_op,
+                                                                          saver=saver),
+                                               checkpoint_dir=logdir,
+                                               hooks=hooks) as sess:
+            step = 0
+            while not sess.should_stop() and not tf_feed.should_stop():
+                _, summary, step = sess.run([train_op, summary_op, global_step])
+                if (step % 100 == 0) and (not sess.should_stop()):
+                    print("{} step: {} {}: {}".format(datetime.now().isoformat(), step, evaluate.name, sess.run(evaluate)))
+                if task_index == 0:
+                    summary_writer.add_summary(summary, step)
+
+
+        logging.info("{} stopping MonitoredTrainingSession".format(datetime.now().isoformat()))
+
+        if sess.should_stop() or step >= args.steps:
+            tf_feed.terminate()
+
+        # WORKAROUND FOR https://github.com/tensorflow/tensorflow/issues/21745
+        # wait for all other nodes to complete (via done files)
+        done_dir = "{}/{}/done".format(ctx.absolute_path(args.model), args.mode)
+        logging.info("Writing done file to: {}".format(done_dir))
+        tf.gfile.MakeDirs(done_dir)
+        with tf.gfile.GFile("{}/{}".format(done_dir, ctx.task_index), 'w') as done_file:
+            done_file.write("done")
+
+        for i in range(60):
+            if len(tf.gfile.ListDirectory(done_dir)) < len(ctx.cluster_spec['worker']):
+                logging.info("{} Waiting for other nodes {}".format(datetime.now().isoformat(), i))
+                time.sleep(1)
+            else:
+                logging.info("{} All nodes done".format(datetime.now().isoformat()))
+                break
+
+
+
+# submit job
+try:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch_size", help="number of records per batch", type=int, default=100)
+    parser.add_argument("--epochs", help="number of epochs", type=int, default=1)
+    parser.add_argument("--model", help="HDFS path to save/load model during train/inference", default="model")
+    parser.add_argument("--steps", help="maximum number of steps", type=int, default=1000)
+    parser.add_argument("--mode", help="train|inference", default="train")
+    parser.add_argument("--rdma", help="use rdma connection", default=False)
+    parser.add_argument("--params", help="use rdma connection", default=False)
+    args = parser.parse_args()
+    SparkContext._gateway = java_gateway.launch_gateway(conf=None)
+    SparkContext._jvm = SparkContext._gateway.jvm
+    java_import(SparkContext._jvm, "org.apache.spark.SparkContext")
+    sc = SparkContext._jvm.SparkContext.getOrCreate()
+    jsc = SparkContext._jvm.JavaSparkContext(sc)
+    jconf = sc.getConf()
+    conf = SparkConf(_jconf=jconf)
+    psc = SparkContext(conf=conf, jsc=jsc)
+    session = SparkSession(psc)
+    df = SparkContext._jvm.com.datapps.linkoopdb.worker.spark.ai.TFModelFunction.getDF(<UID>)
+    sql_context = SQLContext(psc, session)
+    frame = DataFrame(jdf=df, sql_ctx=sql_context)
+    pythonRDD = frame.rdd
+    executors = int(conf.get("spark.executors.num", "2"))
+    path = <PATH>
+    psc.addPyFile(path)
+    cluster = TFCluster.run(psc, map_fun, args, executors, 1 if executors <= 4 else executors / 4 + 1, False,
+                            TFCluster.InputMode.SPARK, log_dir=args.model)
+
+    logging.info("start training...")
+    cluster.train(pythonRDD, args.epochs)
+
+    SparkContext._jvm.com.datapps.linkoopdb.worker.spark.ai.TFModelFunction.setStatus(<UID>,1)
+
+    logging.info("training success!!")
+
+except Exception:
+    try:
+        SparkContext._jvm.com.datapps.linkoopdb.worker.spark.ai.TFModelFunction.setStatus(<UID>,0)
+    except Exception:
+        logging.error("set status failed")
+finally:
+    logging.info("tf cluster shutting down...")
+    cluster.shutdown()
+

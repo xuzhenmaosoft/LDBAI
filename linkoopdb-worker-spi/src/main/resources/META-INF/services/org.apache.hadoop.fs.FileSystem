@@ -1,0 +1,3 @@
+com.datapps.linkoopdb.worker.spi.LinkoopDBLocalFileSystem
+com.datapps.linkoopdb.worker.spi.fs.HttpFileSystem
+com.datapps.linkoopdb.worker.spi.fs.SFTPFileSystem
