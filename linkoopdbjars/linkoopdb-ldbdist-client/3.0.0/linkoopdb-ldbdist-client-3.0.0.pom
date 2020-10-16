@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>linkoopdb-ldbdist</artifactId>
+    <groupId>com.datapps.linkoop</groupId>
+    <version>3.0.0</version>
+  </parent>
+
+  <artifactId>linkoopdb-ldbdist-client</artifactId>
+  <name>LinkoopDB::LDBDist Client</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.datapps.linkoop</groupId>
+      <artifactId>linkoopdb-ldbdist-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.4</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>2.6.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nginx-clojure</groupId>
+      <artifactId>nginx-clojure-embed</artifactId>
+      <version>0.4.5_2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.datapps.linkoop</groupId>
+      <artifactId>linkoopdb-ldbdist-server</artifactId>
+      <version>3.0.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

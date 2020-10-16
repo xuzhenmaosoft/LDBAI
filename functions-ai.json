@@ -1,0 +1,3100 @@
+[
+  {
+    "name": "tensorflow_model_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.TFModelFunction",
+    "returnType": "model(external_alg)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.ExternalModelReturnTypeResolver",
+    "paramTypes": [
+      "table(label anytype, features anytype)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "int default 100",
+      "int default 1",
+      "int default 1000",
+      "varchar(1000) default ''",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000) default 'features'"
+    ],
+    "paramNames": [
+      //训练集
+      "training_table",
+      /** 模型训练算法的文件夹的url，可以是http/ftp/hdfs等,里面至少包括以下子目录:
+        - tf_fun 模块文件夹*/
+      "py_files_url",
+      //算法，可以加上实现前缀以区分，比如 tf_decision_tree
+      "algorithm",
+      //训练方法名
+      "training_function",
+      //number of records per batch
+      "tf_batch_size",
+      //number of epochs
+      "tf_epochs",
+      //maximum number of steps
+      "tf_steps",
+      "tf_params",
+      "modules",
+      "model_init_function",
+      //module前缀的完整预测函数名称
+      "predict_function",
+      "features_columns"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "load_external_model",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.ExternalModelFunction",
+    "returnType": "model(external_alg)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.ExternalModelReturnTypeResolver",
+    "paramTypes": [
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000)",
+      "varchar(1000) default 'features'"
+    ],
+    "paramNames": [
+      /** 是模型文件夹的url，可以是http/ftp/hdfs等,里面至少包括以下子目录:
+        - model 模型文件夹
+        - modules 模块文件夹*/
+      "model_base_url",
+      //目前只支持python
+      "language",
+      //算法，可以加上实现前缀以区分，比如 tf_decision_tree
+      "algorithm",
+      //是需要import的module，逗号分隔
+      "modules",
+      //模型初始化函数完整名称
+      "model_init_function",
+      //module前缀的完整预测函数名称
+      "predict_function",
+      //特征值由哪些列组成，可选，默认是一个feeatures的数组
+      "features_columns"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "predict_by_external_model",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.ExternalModelFunction",
+    "returnType": "table(predict varchar(1024), feature double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoEmPredictResult",
+    "paramTypes": [
+      "model(external_alg)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "train_validation_split",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.TrainValidationSplit",
+    "returnType": "model(best_model)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(50) default 'DecisionTreeClassifier'",
+      "varchar(2000) default '{}'",
+      "varchar(50) default 'BinaryClassificationEvaluator'",
+      "double default 0.75"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "estimator",
+      "estimatorParamMaps",
+      "evaluator",
+      "trainRatio"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "train_validation_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.TrainValidationSplit",
+    "returnType": "table(features double array, prediction double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(best_model)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "decision_tree_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.DecisionTree",
+    "returnType": "model(decision_tree)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "int default 5",
+      "int default 32",
+      "int default 1",
+      "double default 0.0",
+      "double default 0.0",
+      "int default 256",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "maxDepth",
+      // > 0
+      "maxBins",
+      // Must be >= 2 and >= number of categories in any categorical feature.
+      "minInstancesPerNode",
+      // >=1
+      "minWeightFractionPerNode",
+      //[0.0, 0.5)
+      "minInfoGain",
+      //Should be >= 0.0
+      "maxMemoryInMB",
+      //>=10
+      "cacheNodeIds"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "decision_tree_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.DecisionTree",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(decision_tree)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "naive_bayes_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.NaiveBayes",
+    "returnType": "model(naive_bayes)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "double default 1.0",
+      "varchar(32) default 'multinomial'"
+      //"varchar(64) default ''"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "smoothing",
+      "modelType"
+      //"weightCol"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "naive_bayes_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.NaiveBayes",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(naive_bayes)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "als_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Als",
+    "returnType": "model(als)",
+    "paramTypes": [
+      "table(userId int, itemId int,rating float)",
+      "int default 10",
+      "double default 0.1",
+      "int default 10",
+      "int default 10",
+      "int default 10",
+      "boolean default false",
+      "double default 1.0",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "maxIter",
+      "regParam",
+      "rank",
+      "numUserBlocks",
+      "numItemBlocks",
+      "implicitPrefs",
+      "alpha",
+      "nonnegative"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "als_item_user_factors",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Als",
+    "returnType": "table(id double ,features double array)",
+    "paramTypes": [
+      "model(als)",
+      "varchar(32) default 'user' "
+    ],
+    "paramNames": [
+      "model",
+      "factorsattr"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "als_recommend",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Als",
+    "returnType": "table(userId int, recommendations varchar(1024))",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(als)",
+      "table(userId int)",
+      "int default 10"
+    ],
+    "paramNames": [
+      "model",
+      "data",
+      "num"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "als_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Als",
+    "returnType": "table(rating float,prediction float)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(als)",
+      "table(userId int, itemId int)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "lda_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.LDA",
+    "returnType": "model(lda)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 20",
+      "int default 10",
+      "varchar(10) default 'online'",
+      "int default 10",
+      "double default 1024.0",
+      "double default 0.51",
+      "double default 0.05",
+      "boolean default true",
+      "boolean default true"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "maxIter",
+      "k",
+      "optimizer",
+      "checkpointInterval",
+      "learningOffset",
+      "learningDecay",
+      "subsamplingRate",
+      "optimizeDocConcentration",
+      "keepLastCheckpoint"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "lda_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.LDA",
+    "returnType": "table(features double array, prediction double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictArrayResult",
+    "paramTypes": [
+      "model(lda)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_build",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnType": "graph()",
+    "paramTypes": [
+      "table(id anytype)",
+      "table(src anytype, dst anytype)"
+    ],
+    "paramNames": [
+      "vertices-subquery",
+      "edges-subquery"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_page_rank",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnType": "graph()",
+    "paramTypes": [
+      "graph()",
+      "int default 3",
+      "anytype default null",
+      "double default 0.15"
+    ],
+    "paramNames": [
+      "graph",
+      "maxIter",
+      "srcId",
+      "resetProb"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_page_rank_pregel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnType": "graph()",
+    "paramTypes": [
+      "graph()",
+      "double default 0.01",
+      "anytype default null",
+      "double default 0.15"
+    ],
+    "paramNames": [
+      "graph",
+      "tol",
+      "srcId",
+      "resetProb"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_connected_components",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(id anytype, component bigint)",
+    "paramTypes": [
+      "graph()",
+      "int default 1000000",
+      "int default 2"
+    ],
+    "paramNames": [
+      "graph",
+      "broadcastThreshold",
+      "checkpointInterval"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_triangle_count",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(count bigint, id anytype)",
+    "paramTypes": [
+      "graph()"
+    ],
+    "paramNames": [
+      "graph"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_strongly_connected_components",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(id anytype, component bigint)",
+    "paramTypes": [
+      "graph()",
+      "int default 2"
+    ],
+    "paramNames": [
+      "graph",
+      "maxIter"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_label_propagation",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(id anytype, label bigint)",
+    "paramTypes": [
+      "graph()",
+      "int default 2"
+    ],
+    "paramNames": [
+      "graph",
+      "maxIter"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_n_degree",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(src anytype,path anytype array,dst anytype)",
+    "paramTypes": [
+      "graph()",
+      "anytype ",
+      "int default 2"
+    ],
+    "paramNames": [
+      "graph",
+      "sourceId",
+      "n"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_n_degree_all",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(src anytype,path anytype array,dst anytype)",
+    "paramTypes": [
+      "graph()",
+      "int default 2"
+    ],
+    "paramNames": [
+      "graph",
+      "n"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_bfs",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(src anytype,path anytype array,dst anytype)",
+    "paramTypes": [
+      "graph()",
+      "varchar(100)",
+      "varchar(100)",
+      "int default 3"
+    ],
+    "paramNames": [
+      "graph",
+      "fromExpr",
+      "toExpr",
+      "maxPathLength"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "graph_shortest_paths",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.Graph",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.GraphAnyTypeTransform",
+    "returnType": "table(id anytype,distances varchar(100))",
+    "paramTypes": [
+      "graph()",
+      "anytype array"
+    ],
+    "paramNames": [
+      "graph",
+      "landmarks"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "kmeans_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.KMeans",
+    "returnType": "model(kmeans)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 2",
+      "varchar(32) default 'k-means||'",
+      "int default 2",
+      "int default 20",
+      "double default 1e-4"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "k",
+      // >1
+      "initMode",
+      // 'random' and 'k-means||'
+      "initSteps",
+      // > 0
+      "maxIter",
+      // >=1
+      "tol"
+      //Should be >= 0.0
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "kmeans_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.KMeans",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(kmeans)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "kmeans_wssse",
+    //集合内平方和误差
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.KMeansEvaluator",
+    "returnType": "table(wssse double)",
+    //    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(kmeans)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "bisecting_kmeans_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.BisectingKMeans",
+    "returnType": "model(bisectingKMeans)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 4",
+      "int default 20",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "k",
+      // >1
+      "maxIter",
+      // >=1
+      "minDivisibleClusterSize"
+      //Should be >= 0.0
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "bisecting_kmeans_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.BisectingKMeans",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(bisectingKMeans)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "bisecting_kmeans_wssse",
+    //集合内平方和误差
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.KMeansEvaluator",
+    "returnType": "table(wssse double)",
+    //    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(bisectingKMeans)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gaussian_mixture_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.GMM",
+    "returnType": "model(gmm)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 2",
+      "int default 100",
+      "double default 0.01"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "k",
+      // >1
+      "maxIter",
+      // >=1
+      "tol"
+      //Should be >= 0.0
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gaussian_mixture_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.clustering.GMM",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(gmm)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fpgrowth_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.FPGrowth",
+    "returnType": "model(fpgrowth)",
+    "paramTypes": [
+      "table(items double array)",
+      "double default 0.3",
+      "int default 1",
+      "double  default 0.8"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "minSupport",
+      // >1
+      "numPartitions",
+      // 1
+      "minConfidence"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fpgrowth_freq",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.FPGrowthEvaluator",
+    "returnType": "table(items double array ,freq double)",
+    "paramTypes": [
+      "model(fpgrowth)"
+    ],
+    "paramNames": [
+      "model"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fpgrowth_confidence",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.FPGrowthEvaluator",
+    "returnType": "table(antecedent double array ,consequent double array ,confidence double)",
+    "paramTypes": [
+      "model(fpgrowth)"
+    ],
+    "paramNames": [
+      "model"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mse",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RegressionEvaluator",
+    "returnType": "table(mse double)",
+    "paramTypes": [
+      "table(label double, prediction double )"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "rmse",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RegressionEvaluator",
+    "returnType": "table(rmse double)",
+    "paramTypes": [
+      "table(label double, prediction double )"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "r2",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RegressionEvaluator",
+    "returnType": "table(r2 double)",
+    "paramTypes": [
+      "table(label double, prediction double )"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mae",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RegressionEvaluator",
+    "returnType": "table(mae double)",
+    "paramTypes": [
+      "table(label double, prediction double )"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "precisionbythreshold",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(threshold double,precision double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "recallbythreshold",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(threshold double,recall double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fmeasurebythreshold",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(threshold double,fmeasure double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "beta"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "pr",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(recall double,precision double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "roc",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(fpr double,tpr double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "auroc",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(auroc double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "auprc",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.BinaryClassificationEvaluator",
+    "returnType": "table(auprc double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "accuracy",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(accuracy double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "weightedfmeasure",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(weightedfmeasure double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "beta"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "weightedrecall",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(weightedrecall double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "weightedprecision",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(weightedprecision double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fprbylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(fprbylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "weightedfpr",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(weightedfpr double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "fmeasurebylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(fmeasurebylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label",
+      "beta"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "precisionbylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(precisionbylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "recallbylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(recallbylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "confusionmatrix",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MulticlassEvaluator",
+    "returnType": "table(confusionMatrix double array)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlprecision",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlprecision double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlprecisionbylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlprecisionbylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlrecall",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlrecall double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlrecallbylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlrecallbylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlaccuracy",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlaccuracy double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlfmeasure",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlfmeasure double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "mlfmeasurebylabel",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(mlfmeasurebylabel double)",
+    "paramTypes": [
+      "table( prediction double,label double)",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "data",
+      "label"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "hammingloss",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(hammingloss double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "microfmeasure",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(microfmeasure double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "microprecision",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(microprecision double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "microrecall",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(microrecall double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "subsetaccuracy",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.MultilabelEvaluator",
+    "returnType": "table(subsetaccuracy double)",
+    "paramTypes": [
+      "table( prediction double,label double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "silhouettescore",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.ClusteringEvaluator",
+    "returnType": "table(silhouettescore double)",
+    "paramTypes": [
+      "table( prediction double,features double)"
+    ],
+    "paramNames": [
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "precisionat",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RankingEvaluator",
+    "returnType": "table(precisionAt double)",
+    "paramTypes": [
+      "table( userId int, recommendations varchar(1024))",
+      "table( userId int, itemId int)",
+      "int default 5"
+    ],
+    "paramNames": [
+      "predictiondata",
+      "labeldata",
+      "k"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "meanaverageprecision",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RankingEvaluator",
+    "returnType": "table(MAP double)",
+    "paramTypes": [
+      "table( userId int, recommendations varchar(1024))",
+      "table( userId int, itemId int)"
+    ],
+    "paramNames": [
+      "predictiondata",
+      "labeldata"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "ndcgat",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.RankingEvaluator",
+    "returnType": "table(ndcgAt double)",
+    "paramTypes": [
+      "table( userId int, recommendations varchar(1024))",
+      "table( userId int, itemId int)",
+      "int default 5"
+    ],
+    "paramNames": [
+      "predictiondata",
+      "labeldata",
+      "k"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "logisticregression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.LogisticRegression",
+    "returnType": "model(LogisticRegression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "double default 0.0",
+      "double default 0.0",
+      "int default 100",
+      "double default 1E-6",
+      "boolean default true",
+      "boolean default true",
+      "double default 0.5",
+      "varchar(32) default 'auto'"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "regParam",
+      "elasticNetParam",
+      "maxIter",
+      "tol",
+      "fitIntercept",
+      "standardization",
+      "threshold",
+      "family"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "logisticregression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.LogisticRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(LogisticRegression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "rformula_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.RFormula",
+    "returnType": "model(rformula)",
+    "paramTypes": [
+      "table(id double)",
+      "varchar(1280) default 'CLICKED ~ COUNTRY + HOUR'",
+      "varchar(32) default 'error'",
+      "boolean default false",
+      "varchar(32) default 'frequencyDesc'"
+    ],
+    "paramNames": [
+      "rawdata",
+      "formula",
+      "handleInvalid",
+      "forceIndexLabel",
+      "stringIndexerOrderType"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "rformula",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.RFormula",
+    "returnType": "table(features double array, label double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(rformula)",
+      "table(id double)"
+    ],
+    "paramNames": [
+      "model",
+      "rawdata"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "chisqselector_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.ChiSqSelector",
+    "returnType": "model(chisqselector)",
+    "paramTypes": [
+      "table(features double array,label double)",
+      "int default 50",
+      "double default 0.1",
+      "double default 0.05",
+      "double default 0.05",
+      "double default 0.05",
+      "varchar(32) default 'numTopFeatures'"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "numTopFeatures",
+      "percentile",
+      "fpr",
+      "fdr",
+      "fwe",
+      "selectorType"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "chisqselector",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.ChiSqSelector",
+    "returnType": "table(selectFeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(chisqselector)",
+      "table(features double array,label double)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vectorslicer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.VectorSlicer",
+    "returnType": "model(vectorslicer)",
+    "paramTypes": [
+      "int array default array[0,1]"
+      //      "double array default array['f2']"
+    ],
+    "paramNames": [
+      "indices"
+      //      "names"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vectorslicer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.selectors.VectorSlicer",
+    "returnType": "table(selectFeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(vectorslicer)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "tokenizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.Tokenizer",
+    "returnType": "model(splitwords)",
+    "paramTypes": [
+      //      "int default 1",
+      //      "boolean default true",
+      //      "varchar(10) default '\\s+'",
+      //      "boolean default true"
+    ],
+    "paramNames": [
+      //      "minTokenLength",
+      //      "gaps",
+      //      "pattern",
+      //      "toLowercase"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "tokenizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.Tokenizer",
+    "returnType": "table(words varchar(32) array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(splitwords)",
+      "table(sentence varchar(2048))"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "hashingtf_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.HashingTF",
+    "returnType": "model(hashingtf)",
+    "paramTypes": [
+      "int default 262144",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "numFeatures",
+      "binary"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "hashingtf",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.HashingTF",
+    "returnType": "table(rawfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(hashingtf)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "idf_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.IDF",
+    "returnType": "model(idf)",
+    "paramTypes": [
+      "table(rawfeatures double array)",
+      "int default 0"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "minDocFreq"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "idf",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.tfidf.IDF",
+    "returnType": "table(features double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(idf)",
+      "table(rawfeatures double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "word2vec_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.Word2Vec",
+    "returnType": "model(word2vec)",
+    "paramTypes": [
+      "table(words varchar(32) array)",
+      "int default 100",
+      "int default 5",
+      "double default 0.025",
+      "int default 1",
+      "int default 1",
+      "int default 0",
+      "int default 1000"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "vectorSize",
+      "windowSize",
+      "stepSize",
+      "numPartitions",
+      "maxIter",
+      "minCount",
+      "maxSentenceLength"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "word2vec",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.Word2Vec",
+    "returnType": "table(features double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(word2vec)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "countvectorizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.CountVectorizer",
+    "returnType": "model(countvectorizer)",
+    "paramTypes": [
+      "table(words varchar(32) array)",
+      "int default 262144",
+      "double default 1.0",
+      "double default 1.0",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "vocabSize",
+      "minDF",
+      "minTF",
+      "binary"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "countvectorizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.CountVectorizer",
+    "returnType": "table(features double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(countvectorizer)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "featurehasher_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.FeatureHasher",
+    "returnType": "model(featurehasher)",
+    "paramTypes": [
+      "varchar(32) array default array['REAL','BOOL','STRINGNUM','STRING']",
+      "int default 262144",
+      "varchar(32) array default array['']"
+    ],
+    "paramNames": [
+      "inputCols",
+      "numFeatures",
+      "categoricalCols"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "featurehasher",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.extractors.FeatureHasher",
+    "returnType": "table(features double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(featurehasher)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "normalizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Normalizer",
+    "returnType": "model(normalizer)",
+    "paramTypes": [
+      "double default 2.0"
+    ],
+    "paramNames": [
+      "p"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "normalizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Normalizer",
+    "returnType": "table(normfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(normalizer)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "onehotencoder_estimator_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.OneHotEncoderEstimator",
+    "returnType": "model(onehotencoder_estimator)",
+    "paramTypes": [
+      "table(categoryIndex1 double)",
+      "varchar(32) array default array['CATEGORYINDEX1','CATEGORYINDEX2']",
+      // Input columns must be NumericType.
+      "varchar(32) array default array['CATEGORYVEC1','CATEGORYVEC2']",
+      "varchar(32) default 'error'",
+      "boolean default true"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "inputCols",
+      "outputCols",
+      "handleInvalid",
+      "dropLast"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "onehotencoder_estimator",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.OneHotEncoderEstimator",
+    "returnType": "table(categoryVec1 double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(onehotencoder_estimator)",
+      "table(categoryIndex1 double)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "index_to_string_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.IndexToString",
+    "returnType": "model(index_to_string)",
+    "paramTypes": [
+      //      "varchar(32) default 'CATEGORYINDEX'",// Input columns must be NumericType.
+      //      "varchar(32) default 'ORIGINALCATEGORY'",
+      "varchar(32) array default null"
+    ],
+    "paramNames": [
+      //      "inputCol",
+      //      "outputCol",
+      "labels"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "index_to_string",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.IndexToString",
+    "returnType": "table(originalCategory varchar(32))",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(index_to_string)",
+      "table(categoryIndex double)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "string_indexer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StringIndexer",
+    "returnType": "model(string_indexer)",
+    "paramTypes": [
+      "table(category varchar(32))",
+      "varchar(32) array default array['CATEGORY']",
+      "varchar(32) array default array['CATEGORYINDEX']",
+      "varchar(32) default 'error'",
+      "varchar(32) default 'frequencyDesc'"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "inputCols",
+      "outputCols",
+      "handleInvalid",
+      "stringOrderType"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "string_indexer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StringIndexer",
+    "returnType": "table(category varchar(32),categoryIndex double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(string_indexer)",
+      "table(category varchar(32))"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "minmax_scaler_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.MinMaxScaler",
+    "returnType": "model(minmax_scaler)",
+    "paramTypes": [
+      "table(features double array)",
+      "double default 0.0",
+      "double default 1.0"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "min",
+      "max"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "minmax_scaler",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.MinMaxScaler",
+    "returnType": "table(scaledFeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(minmax_scaler)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "maxabs_scaler_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.MaxAbsScaler",
+    "returnType": "model(maxabs_scaler)",
+    "paramTypes": [
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "maxabs_scaler",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.MaxAbsScaler",
+    "returnType": "table(scaledFeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(maxabs_scaler)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "standard_scaler_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StandardScaler",
+    "returnType": "model(standard_scaler)",
+    "paramTypes": [
+      "table(features double array)",
+      "boolean default false",
+      "boolean default true"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "withMean",
+      //注意对于稀疏输入矩阵不可以用 true 均值为0
+      "withStd"
+      // true 方差为1
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "standard_scaler",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StandardScaler",
+    "returnType": "table(scaledfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(standard_scaler)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "trainning_table"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "onevsrest_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.OneVsRest",
+    "returnType": "model(OneVsRest)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "int default  1",
+      //      "varchar(1024) array default array['org.apache.spark.ml.classification.ai.classifier.LogisticRegression','regParam double  0.0','elasticNetParam double 0.0','maxIter int 100','tol double 1E-6','fitIntercept boolean true','standardization boolean true','threshold double 0.5','family varchar(32) auto']"
+      "varchar(1024) default '{}'"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "parallelism",
+      "classifier"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "onevsrest_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.OneVsRest",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(OneVsRest)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+    //  },
+    //  {
+    //    "name": "knn_classifier",
+    //    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.KNN",
+    //    "returnType": "table(features double array,prediction double)",
+    //    "paramTypes": [
+    //      "table(label double, features double array)",
+    //      "int default 5",
+    //      "int default 1",
+    //      "int default 5",
+    //      "int default 20",
+    //      "int array default array[10,20]",
+    //      "double default 0.7"
+    //    ],
+    //    "paramNames": [
+    //      "trainning_table",
+    //      "k",
+    //      "topTreeSize",
+    //      "topTreeLeafSize",
+    //      "subTreeLeafSize",
+    //      "bufferSizeSampleSizes",
+    //      "balanceThreshold"
+    //    ],
+    //    "paramQuoted": true,
+    //    "valid": true,
+    //    "array": false
+  },
+  {
+    "name": "linearsvc_train",
+    //只支持二分类
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.LinearSVC",
+    "returnType": "model(LinearSVC)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "double default 0.0",
+      "int default 100",
+      "boolean default true",
+      "double default 1E-6",
+      "boolean default true",
+      "double default 0.0",
+      "int default 2"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "regParam",
+      "maxIter",
+      "fitIntercept",
+      "tol",
+      "standardization",
+      "threshold",
+      "aggregationDepth"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "linearsvc_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.LinearSVC",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(LinearSVC)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "multilayer_perceptron_classifier_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.MultilayerPerceptronClassifier",
+    "returnType": "model(multilayer_perceptron_classifier)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "int array default array[3,7,2]",
+      "int default 128",
+      "varchar(32) default 'l-bfgs'",
+      "int default 100",
+      "double default 1E-6",
+      //      "double array default null",
+      "double default 0.03"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "layers",
+      "blockSize",
+      "solver",
+      "maxIter",
+      "tol",
+      //      "initialWeights",
+      "stepSize"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "multilayer_perceptron_classifier_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.MultilayerPerceptronClassifier",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(multilayer_perceptron_classifier)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gbtclassifier_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.GBTClassifier",
+    "returnType": "model(GBTClassifier)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "int default 5",
+      "int default 32",
+      "int default 1",
+      "double default 0.0",
+      "double default 0.0",
+      "int default 256",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "maxDepth",
+      "maxBins",
+      "minInstancesPerNode",
+      "minWeightFractionPerNode",
+      "minInfoGain",
+      "maxMemoryInMB",
+      "cacheNodeIds"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gbtclassifier_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.GBTClassifier",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(GBTClassifier)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gbtregression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.GBTRegression",
+    "returnType": "model(GBTRegression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "varchar(32) default 'variance'",
+      "varchar(32) default 'squared'",
+      "int default 5",
+      "int default 32",
+      "int default 20",
+      "int default 256",
+      "double default 0.0",
+      "int default 1",
+      "double default 0.0",
+      "double default 0.1",
+      "double default 1.0",
+      "boolean default false",
+      "int default 10",
+      "varchar(32) default 'auto'",
+      "double default 0.01"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "impurity",
+      "lossType",
+      "maxDepth",
+      "maxBins",
+      "maxIter",
+      "maxMemoryInMB",
+      "minInfoGain",
+      "minInstancesPerNode",
+      "minWeightFractionPerNode",
+      "stepSize",
+      "subsamplingRate",
+      "cacheNodeIds",
+      "checkpointInterval",
+      "featureSubsetStrategy",
+      "validationTol"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "gbtregression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.GBTRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(GBTRegression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "survival_regression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.SurvivalRegression",
+    "returnType": "model(survival_regression)",
+    "paramTypes": [
+      "table(label double, features double array,censor double)",
+      "double array  default Array[0.01E0, 0.05E0, 0.1E0, 0.25E0, 0.5E0, 0.75E0, 0.9E0, 0.95E0, 0.99E0]",
+      "varchar(32) default 'quantiles'",
+      "boolean default true",
+      "int default 100",
+      "double default 1E-6",
+      "int default 2"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "quantileProbabilities",
+      "quantilesCol",
+      "fitIntercept",
+      "maxIter",
+      "tol",
+      "aggregationDepth"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "survival_regression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.SurvivalRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(survival_regression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "isotonic_regression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.IsotonicRegression",
+    "returnType": "model(isotonic_regression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "boolean default true",
+      "int default 0"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "isotonic",
+      "featureIndex"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "isotonic_regression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.IsotonicRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(isotonic_regression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "random_forest_classifier_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.RandomForestClassifier",
+    "returnType": "model(random_forest_classifier)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "int default 5",
+      "int default 32",
+      "int default 1",
+      "double default 0.0",
+      "double default 0.0",
+      "int default 256",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "maxDepth",
+      "maxBins",
+      "minInstancesPerNode",
+      "minWeightFractionPerNode",
+      "minInfoGain",
+      "maxMemoryInMB",
+      "cacheNodeIds"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "random_forest_classifier_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.classifier.RandomForestClassifier",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(random_forest_classifier)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "random_forest_regression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.RandomForestRegression",
+    "returnType": "model(random_forest_regression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "varchar(32) default 'variance'",
+      "int default 20",
+      "varchar(32) default 'auto'",
+      "int default 5",
+      "int default 32",
+      "int default 256",
+      "double default 0.0",
+      "int default 1",
+      //      "long default 100.0",
+      "double default 0.0",
+      "double default 1.0",
+      "boolean default false",
+      "int default 10"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "impurity",
+      "numTrees",
+      "featureSubsetStrategy",
+      "maxDepth",
+      "maxBins",
+      "maxMemoryInMB",
+      "minInfoGain",
+      "minInstancesPerNode",
+      "minWeightFractionPerNode",
+      //      "seed",
+      "subsamplingRate",
+      "cacheNodeIds",
+      "checkpointInterval"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "random_forest_regression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.RandomForestRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(random_forest_regression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "decision_tree_regression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.DecisionTreeRegressor",
+    "returnType": "model(decision_tree_regression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(32) default ''",
+      "int default 5",
+      "int default 32",
+      "int default 1",
+      "double default 0.0",
+      "double default 0.0",
+      "int default 256",
+      "boolean default false"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "leafCol",
+      "maxDepth",
+      "maxBins",
+      "minInstancesPerNode",
+      "minWeightFractionPerNode",
+      "minInfoGain",
+      "maxMemoryInMB",
+      "cacheNodeIds"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "decision_tree_regression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.DecisionTreeRegressor",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(decision_tree_regression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "linear_regression_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.LinearRegression",
+    "returnType": "model(linear_regression)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "double default 0.0",
+      "boolean default true",
+      "boolean default true",
+      "double default 0.0",
+      "int default 100",
+      "double default 1E-6",
+      "varchar(32) default 'auto'",
+      "int default 2",
+      "varchar(32) default 'squaredError'",
+      "double default 1.35"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "regParam",
+      "fitIntercept",
+      "standardization",
+      "elasticNetParam",
+      "maxIter",
+      "tol",
+      "solver",
+      "aggregationDepth",
+      "loss",
+      "epsilon"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "linear_regression_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.LinearRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(linear_regression)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "imputer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Imputer",
+    "returnType": "model(imputer)",
+    "paramTypes": [
+      "table(a double, b double)",
+      "varchar(32) array default array['A','B']",
+      "varchar(32) array default array['OUT_A','OUT_B']",
+      "varchar(32) default 'mean'",
+      "double default 11.0"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "inputCols",
+      "outputCols",
+      "strategy",
+      "missingValue"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "imputer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Imputer",
+    "returnType": "table(out_a double, out_b double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(imputer)",
+      "table(a double, b double)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "quantile_discretizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.QuantileDiscretizer",
+    "returnType": "model(quantile_discretizer)",
+    "paramTypes": [
+      "table(id double, hour double)",
+      "double default 0.001",
+      "varchar(32) default 'error'",
+      "int array default array[2]",
+      "varchar(32) array default array['HOUR']",
+      "varchar(32) array default array['RESULT']"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "relativeError",
+      "handleInvalid",
+      "numBucketsArray",
+      "inputCols",
+      "outputCols"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "quantile_discretizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.QuantileDiscretizer",
+    "returnType": "table(result double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(quantile_discretizer)",
+      "table(id double,hour double)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vector_size_hint_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorSizeHint",
+    "returnType": "model(vector_size_hint)",
+    "paramTypes": [
+      "int  default 3",
+      "varchar(32)  default 'skip'"
+    ],
+    "paramNames": [
+      "size",
+      "handleInvalid"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vector_size_hint",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorSizeHint",
+    "returnType": "table(userfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(vector_size_hint)",
+      "table(userfeatures double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vector_assembler_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorAssembler",
+    "returnType": "model(vector_assembler)",
+    "paramTypes": [
+      "varchar(32) array default array['HOUR', 'MOBILE', 'USERFEATURES']"
+    ],
+    "paramNames": [
+      "inputCols"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vector_assembler",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorAssembler",
+    "returnType": "table(features double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(vector_assembler)",
+      "table(userfeatures double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "element_wise_product_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.ElementwiseProduct",
+    "returnType": "model(element_wise_product)",
+    "paramTypes": [
+      "double array default array[0.0E0,1.0E0,2.0E0]"
+    ],
+    "paramNames": [
+      "scalingVec"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "element_wise_product",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.ElementwiseProduct",
+    "returnType": "table(transformedvector double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(element_wise_product)",
+      "table(vector double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "bucketizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Bucketizer",
+    "returnType": "model(bucketizer)",
+    "paramTypes": [
+      "varchar(32) array default array['FEATURES1','FEATURES2']",
+      "varchar(32) array default array['BUCKETEDFEATURES1','BUCKETEDFEATURES2']",
+      "double array array default array[array[-1000E0,-0.5E0,0.0E0, 0.5E0,1000E0],array[-1000E0,-0.4E0,0.0E0, 0.3E0,1000E0]]",
+      "varchar(32) default 'error'"
+    ],
+    "paramNames": [
+      "inputCols",
+      "outputCols",
+      "splitsArray",
+      "handleInvalid"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "bucketizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Bucketizer",
+    "returnType": "table(bucketedfeatures1 double,bucketedfeatures2 double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(bucketizer)",
+      "table(features1 double,features2 double)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  //  {
+  //    "name": "interaction_transformer",
+  //    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Interaction",
+  //    "returnType": "model(interaction)",
+  //    "paramTypes": [
+  //      "varchar(32) array default array['FEATURES']",
+  //      "varchar(32)  default 'INTERACTEDFEATURES'"
+  //    ],
+  //    "paramNames": [
+  //      "inputCols",
+  //      "outputCol"
+  //    ],
+  //    "paramQuoted": true,
+  //    "valid": true,
+  //    "array": false
+  //  },
+  //  {
+  //    "name": "interaction",
+  //    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Interaction",
+  //    "returnType": "table(interactedfeatures double array)",
+  //    "paramTypes": [
+  //      "model(interaction)",
+  //      "table(features double array)"
+  //    ],
+  //    "paramNames": [
+  //      "model",
+  //      "data"
+  //    ],
+  //    "paramQuoted": true,
+  //    "valid": true,
+  //    "array": false
+  //  },
+  {
+    "name": "vector_indexer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorIndexer",
+    "returnType": "model(vector_indexer)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 20",
+      "varchar(32)  default 'error'"
+    ],
+    "paramNames": [
+      "data",
+      "maxCategories",
+      "handleInvalid"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "vector_indexer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.VectorIndexer",
+    "returnType": "table(indexedfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(vector_indexer)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "dct_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.DCT",
+    "returnType": "model(dct)",
+    "paramTypes": [
+      "boolean default false"
+    ],
+    "paramNames": [
+      "inverse"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "dct",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.DCT",
+    "returnType": "table(featuresdct double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(dct)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "polynomial_expansion_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.PolynomialExpansion",
+    "returnType": "model(polynomial_expansion)",
+    "paramTypes": [
+      "int default 2"
+    ],
+    "paramNames": [
+      "degree"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "polynomial_expansion",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.PolynomialExpansion",
+    "returnType": "table(polyfeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(polynomial_expansion)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "pca_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.PCA",
+    "returnType": "model(pca)",
+    "paramTypes": [
+      "table(features double array)",
+      "int default 3"
+    ],
+    "paramNames": [
+      "data",
+      "k"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "pca",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.PCA",
+    "returnType": "table(pcafeatures double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(pca)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "binarizer_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Binarizer",
+    "returnType": "model(binarizer)",
+    "paramTypes": [
+      "varchar(32) array default array['FEATURES']",
+      "varchar(32) array default array['BINARIZEDFEATURE']",
+      "double default 0.0"
+    ],
+    "paramNames": [
+      "inputCols",
+      "outputCols",
+      "threshold"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "binarizer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.Binarizer",
+    "returnType": "table(binarizedfeature double array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoMuloutputResult",
+    "paramTypes": [
+      "model(binarizer)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "ngram_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.NGram",
+    "returnType": "model(ngram)",
+    "paramTypes": [
+      "int default 2"
+    ],
+    "paramNames": [
+      "n"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "ngram",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.NGram",
+    "returnType": "table(ngrams varchar(32) array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(ngram)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "stop_words_remover_transformer",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StopWordsRemover",
+    "returnType": "model(stop_words_remover)",
+    "paramTypes": [
+      "boolean default false",
+      "varchar(32) array default array['i','my','me','myself','we','ours','ourselves','our']"
+    ],
+    "paramNames": [
+      "caseSensitive",
+      "stopWords"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "stop_words_remover",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.feature.transformers.StopWordsRemover",
+    "returnType": "table(filtered varchar(32) array)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "model(stop_words_remover)",
+      "table(words varchar(32) array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "glr_train",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.GeneralizedLinearRegression",
+    "returnType": "model(glr)",
+    "paramTypes": [
+      "table(label double, features double array)",
+      "varchar(24) default 'gaussian'",
+      "double default 0.0",
+      "varchar(24) default 'identity'",
+      "double default 1.0",
+      "boolean default true",
+      "int default 25",
+      "double default 1E-6",
+      "double default 0.0",
+      "varchar(24) default 'irls'"
+    ],
+    "paramNames": [
+      "trainning_table",
+      "family",
+      "variancePower",
+      "link",
+      "linkPower",
+      "fitIntercept",
+      "maxIter",
+      "tol",
+      "regParam",
+      "solver"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "glr_predict",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.regression.GeneralizedLinearRegression",
+    "returnType": "table(features double array, prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoPredictResult",
+    "paramTypes": [
+      "model(glr)",
+      "table(features double array)"
+    ],
+    "paramNames": [
+      "model",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "glr_statistic",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.GlrEvaluator",
+    "returnType": "table(statistic double)",
+    "paramTypes": [
+      "model(glr)",
+      "table(features double array ,label double)",
+      "varchar(64) default 'workingResiduals'"
+      //
+    ],
+    "paramNames": [
+      "model",
+      "data",
+      "param"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "repartition",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.GlrEvaluator",
+    "returnType": "table(statistic double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.OriginalTableStructure",
+    "paramTypes": [
+      "table(features double array)",
+      "int"
+    ],
+    "paramNames": [
+      "table",
+      "repartition number"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "repartition_by_count",
+    "fullClassName": "com.datapps.linkoopdb.worker.spark.ai.evaluator.GlrEvaluator",
+    "returnType": "table(statistic double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.OriginalTableStructure",
+    "paramTypes": [
+      "table(features double array)",
+      "int"
+    ],
+    "paramNames": [
+      "table",
+      "repartition number"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "pipeline_build",
+    "returnType": "pipeline(pipeline)",
+    "paramTypes": [
+      "anytype..."
+    ],
+    "paramNames": [
+      "pipelinestage"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  },
+  {
+    "name": "pipeline_apply",
+    "returnType": "table(prediction double)",
+    "returnTypeResolver": "com.datapps.linkoopdb.server.udf.MergeColumnIntoTransformResult",
+    "paramTypes": [
+      "pipeline(pipeline)",
+      "table(label double )"
+    ],
+    "paramNames": [
+      "pipeline",
+      "data"
+    ],
+    "paramQuoted": true,
+    "valid": true,
+    "array": false
+  }
+]

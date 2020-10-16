@@ -1,0 +1,10 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Apr 18 11:16:27 CST 2019
+http\://repo.spring.io/milestone/.error=
+http\://clojars.org/repo/.lastUpdated=1555557387241
+http\://maven.aliyun.com/nexus/content/repositories/central/.error=
+http\://maven.aliyun.com/nexus/content/repositories/central/.lastUpdated=1555557385979
+http\://192.168.1.133\:8081/artifactory/datapps/.lastUpdated=1555554454009
+http\://clojars.org/repo/.error=
+http\://repo.spring.io/milestone/.lastUpdated=1555557386602
+http\://192.168.1.133\:8081/artifactory/datapps/.error=

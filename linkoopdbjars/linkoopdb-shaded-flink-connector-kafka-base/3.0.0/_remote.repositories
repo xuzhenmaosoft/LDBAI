@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sun Sep 27 15:03:00 CST 2020
+linkoopdb-shaded-flink-connector-kafka-base-3.0.0-sources.jar>=
+linkoopdb-shaded-flink-connector-kafka-base-3.0.0.jar>=
+linkoopdb-shaded-flink-connector-kafka-base-3.0.0.pom>=

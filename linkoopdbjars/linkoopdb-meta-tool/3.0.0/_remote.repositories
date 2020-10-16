@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sun Sep 27 15:03:35 CST 2020
+linkoopdb-meta-tool-3.0.0.pom>=
+linkoopdb-meta-tool-3.0.0-tests.jar>=
+linkoopdb-meta-tool-3.0.0.jar>=

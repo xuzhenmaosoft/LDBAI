@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>linkoopdb-stream</artifactId>
+    <groupId>com.datapps.linkoop</groupId>
+    <version>3.0.0</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>linkoopdb-shaded-flink-connector-kafka-base</artifactId>
+  <name>LinkoopDB::Stream Shaded Flink Connector Kafka Base</name>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>shade-kafka</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
+              <createSourcesJar>true</createSourcesJar>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.flink.table.descriptors.Kafka</pattern>
+                  <shadedPattern>com.datapps.linkoopdb.shaded.flink.table.descriptors.Kafka</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.flink.table.descriptors.KafkaValidator</pattern>
+                  <shadedPattern>com.datapps.linkoopdb.shaded.flink.table.descriptors.KafkaValidator</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.flink.streaming.connectors.kafka</pattern>
+                  <shadedPattern>com.datapps.linkoopdb.shaded.flink.streaming.connectors.kafka</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.flink.streaming.util.serialization</pattern>
+                  <shadedPattern>com.datapps.linkoopdb.shaded.flink.streaming.util.serialization</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+

@@ -1,0 +1,10 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Apr 18 11:17:27 CST 2019
+http\://repo.spring.io/milestone/.error=
+http\://clojars.org/repo/.lastUpdated=1555557447587
+http\://maven.aliyun.com/nexus/content/repositories/central/.error=
+http\://maven.aliyun.com/nexus/content/repositories/central/.lastUpdated=1555557444575
+http\://clojars.org/repo/.error=
+@default-datapps-http\://192.168.1.133\:8081/artifactory/datapps/.lastUpdated=1555557442566
+http\://repo.spring.io/milestone/.lastUpdated=1555557445995
+http\://192.168.1.133\:8081/artifactory/datapps/.error=Could not transfer artifact com.datapps.linkoop\:linkoopdb-metastore\:jar\:2.0.0 from/to datapps (http\://192.168.1.133\:8081/artifactory/datapps)\: Connect to 192.168.1.133\:8081 [/192.168.1.133] failed\: Connection timed out\: connect

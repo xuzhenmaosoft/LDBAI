@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>linkoop</artifactId>
+    <groupId>com.datapps.linkoop</groupId>
+    <version>3.0.0</version>
+  </parent>
+
+  <artifactId>linkoopdb-monitor</artifactId>
+  <packaging>pom</packaging>
+  <name>LinkoopDB::Monitor</name>
+
+  <properties>
+    <grpc.verion>1.12.0</grpc.verion>
+    <jersey.version>2.25.1</jersey.version>
+  </properties>
+
+  <modules>
+    <module>linkoopdb-monitor-common</module>
+    <module>linkoopdb-monitor-agent</module>
+    <module>linkoopdb-monitor-client</module>
+    <module>linkoopdb-monitor-pushgateway</module>
+  </modules>
+
+</project>
